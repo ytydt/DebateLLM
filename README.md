@@ -74,39 +74,39 @@ To visualize the results with Neptune:
 
 ## 📊 Benchmarks
 
-Our benchmarks showcase DebateLLM's performance on MedQA, PubMedQA, and MMLU datasets, focusing on accuracy versus cost, time efficiency, token economy, and agent agreement impact. These visualizations illustrate the balance between accuracy and computational cost, the speed and quality of responses, linguistic efficiency, and the effects of consensus strategies in medical Q&A contexts. Each dataset highlights the varied capabilities of DebateLLM's strategies.
+Our benchmarks showcase DebateLLM's performance on MedQA, PubMedQA, and MMLU datasets, focusing on accuracy versus cost, time efficiency, token economy, and agent agreement impact. For all our experiments we use GPT 3.5, unless specified otherwise. These visualizations illustrate the balance between accuracy and computational cost, the speed and quality of responses, linguistic efficiency, and the effects of consensus strategies in medical Q&A contexts. Each dataset highlights the varied capabilities of DebateLLM's strategies.
 
-### MedQA Dataset
+#### MedQA Dataset
 
 <div>
-  <img src="./imgs/results/average_seconds_per_question_vs_accuracy_medqa_0.png" alt="Average Seconds per Question vs. Accuracy MedQA" width="54%"/>
-  <img src="./imgs/results/average_tokens_per_question_vs_accuracy_medqa_0.png" alt="Average Tokens per Question vs. Accuracy MedQA" width="39.6%"/>
+  <img src="./imgs/results/MedQA_Average seconds per question_scatter_plots.png" alt="Average Seconds per Question vs. Accuracy MedQA" width="46.5%"/>
+  <img src="./imgs/results/MedQA_Average tokens per question_scatter_plots.png" alt="Average Tokens per Question vs. Accuracy MedQA" width="46.5%"/>
 </div>
 <div>
-  <img src="./imgs/results/accuracy_vs_cost_0.png" alt="Accuracy vs. Cost MedQA" width="45%"/>
-  <img src="./imgs/results/total_acc_box_medqa_0.png" alt="Total Accuracy Box MedQA" width="48.7%"/>
+  <img src="./imgs/results/MedQA_Total cost_scatter_plots.png" alt="Accuracy vs. Cost MedQA" width="51.8%"/>
+  <img src="./imgs/results/medqa_total_acc_box.png" alt="Total Accuracy Box MedQA" width="41.2%"/>
 </div>
 
 ### PubMedQA Dataset
 
 <div>
-  <img src="./imgs/results/average_seconds_per_question_vs_accuracy_pubmedqa_0.png" alt="Average Seconds per Question vs. Accuracy PubMedQA" width="54%"/>
-  <img src="./imgs/results/average_tokens_per_question_vs_accuracy_pubmedqa_0.png" alt="Average Tokens per Question vs. Accuracy PubMedQA" width="39.6%"/>
+  <img src="./imgs/results/PubMedQA_Average seconds per question_scatter_plots.png" alt="Average Seconds per Question vs. Accuracy PubMedQA" width="46.5%"/>
+  <img src="./imgs/results/PubMedQA_Average tokens per question_scatter_plots.png" alt="Average Tokens per Question vs. Accuracy PubMedQA" width="46.5%"/>
 </div>
 <div>
-  <img src="./imgs/results/accuracy_vs_cost_corrected_0.png" alt="Accuracy vs. Cost PubMedQA" width="45%"/>
-  <img src="./imgs/results/total_acc_box_pubmedqa_0.png" alt="Total Accuracy Box PubMedQA" width="48.7%"/>
+  <img src="./imgs/results/PubMedQA_Total cost_scatter_plots.png" alt="Accuracy vs. Cost PubMedQA" width="51.8%"/>
+  <img src="./imgs/results/pubmedqa_total_acc_box.png" alt="Total Accuracy Box PubMedQA" width="41.2%"/>
 </div>
 
 ### MMLU Dataset
 
 <div>
-  <img src="./imgs/results/average_seconds_per_question_vs_accuracy_mmlu_0.png" alt="Average Seconds per Question vs. Accuracy MMLU" width="54%"/>
-  <img src="./imgs/results/average_tokens_per_question_vs_accuracy_mmlu_0.png" alt="Average Tokens per Question vs. Accuracy MMLU" width="39.6%"/>
+  <img src="./imgs/results/MMLU_Average seconds per question_scatter_plots.png" alt="Average Seconds per Question vs. Accuracy MMLU" width="46.5%"/>
+  <img src="./imgs/results/MMLU_Average tokens per question_scatter_plots.png" alt="Average Tokens per Question vs. Accuracy MMLU" width="46.5%"/>
 </div>
 <div>
-  <img src="./imgs/results/total_cost_vs_accuracy_mmlu_0.png" alt="Accuracy vs. Cost MMLU" width="45%"/>
-  <img src="./imgs/results/total_acc_box_mmlu_0.png" alt="Total Accuracy Box MMLU" width="48.7%"/>
+  <img src="./imgs/results/MMLU_Total cost_scatter_plots.png" alt="Accuracy vs. Cost MMLU" width="51.8%"/>
+  <img src="./imgs/results/mmlu_total_acc_box.png" alt="Total Accuracy Box MMLU" width="41.2%"/>
 </div>
 
 ### Agent Agreement Analysis
@@ -114,11 +114,19 @@ Our benchmarks showcase DebateLLM's performance on MedQA, PubMedQA, and MMLU dat
 Modulating the agreement intensity provides a substantial improvement in performance for various models. For Multi-Persona, there is an approximate 15% improvement, and for Society of Minds (SoM), an approximate 5% improvement on the USMLE dataset. The 90% agreement intensity prompts applied to Multi-Persona demonstrate a new high score on the MedQA dataset, highlighted in the MedQA dataset cost plot as a red cross.
 
 <div>
-  <img src="./imgs/results/prompt_agreement_vs_accuracy_0.png" alt="Agreement Intensity" width="47%"/>
-  <img src="./imgs/results/agreement_vs_accuracy_0.png" alt="Agreement vs Accuracy" width="47%"/>
+  <img src="./imgs/results/prompt_agreement_vs_accuracy.png" alt="Agreement Intensity" width="47%"/>
+  <img src="./imgs/results/agreement_vs_accuracy.png" alt="Agreement vs Accuracy" width="47%"/>
 </div>
 
 The benchmarks indicate the effectiveness of various strategies and models implemented within DebateLLM. For detailed analysis and discussion, refer to our [paper](https://arxiv.org/abs/2311.17371).
+
+### GPT4 results
+
+We also assessed GPT-4's capability on the MedQA dataset, applying the optimal agreement modulation value identified for Multi-Persona with GPT-3.5 on USMLE. The results suggest that these hyperparameter settings are indeed capable of transferring effectively to more advanced models. The results are shown below:
+<div>
+  <img src="./imgs/results/medqa_gpt4.png" alt="MedQA gpt4" width="51.8%"/>
+  <img src="./imgs/results/medqa_gpt4_total_acc_box.png" alt="Total Accuracy Box MedQA" width="41.2%"/>
+</div>
 
 ## Contributing 🤝
 Please read our [contributing docs](docs/CONTRIBUTING.md) for details on how to submit pull requests, our Contributor License Agreement and community guidelines.
