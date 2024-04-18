@@ -149,9 +149,8 @@ dmypy.json
 # cache
 3.8/
 
-# OpenAI API key
-api_key.txt
-api_keys_human_read_only.txt
+# API keys
+*api_key.txt
 
 # Experiment results
 outputs/
@@ -181,11 +180,5 @@ llama
 # Model parameters
 params
 
-# docs
-api_keys_human_read_only.txt
-
 # VScode env
 .env
-
-# API
-api_keys_human_read_only.txt
