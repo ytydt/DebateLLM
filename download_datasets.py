@@ -1,77 +1,115 @@
-import os
+# Copyright 2023 InstaDeep Ltd. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import json
+import shutil
+import subprocess
 import tarfile
 import zipfile
-import shutil
 from pathlib import Path
-import subprocess
+
 import requests
+
+MMLU_DIR = Path("data/datasets/mmlu")
+USMLE_DIR = Path("data/datasets/usmle")
+MEDMCQA_DIR = Path("data/datasets/medmcqa")
+MEDQA_DIR = Path("data/datasets/medqa")
+PUBMEDQA_DIR = Path("data/datasets/pubmedqa")
+COSMOSQA_DIR = Path("data/datasets/cosmosqa")
+GPQA_DIR = Path("data/datasets/gpqa")
 
 
 def _download(url: str, path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     with requests.get(url, stream=True) as r:
         r.raise_for_status()
-        with open(path, 'wb') as f:
+        with open(path, "wb") as f:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
     return path
 
 
-def download_mmlu(dest: Path = Path('data/datasets/mmlu')) -> None:
+def download_mmlu(dest: Path = MMLU_DIR) -> None:
     dest.mkdir(parents=True, exist_ok=True)
-    tar_path = _download('https://people.eecs.berkeley.edu/~hendrycks/data.tar', dest / 'data.tar')
+    tar_path = _download(
+        "https://people.eecs.berkeley.edu/~hendrycks/data.tar", dest / "data.tar"
+    )
     with tarfile.open(tar_path) as tar:
         tar.extractall(dest)
     tar_path.unlink()
-    data_dir = dest / 'data'
+    data_dir = dest / "data"
     if data_dir.exists():
         for item in data_dir.iterdir():
             shutil.move(str(item), dest)
         data_dir.rmdir()
 
 
-def download_usmle(dest: Path = Path('data/datasets/usmle')) -> None:
+def download_usmle(dest: Path = USMLE_DIR) -> None:
     dest.mkdir(parents=True, exist_ok=True)
-    base = 'https://huggingface.co/datasets/medalpaca/medical_meadow_usmle_self_assessment/raw/main/'
+    base = (
+        "https://huggingface.co/datasets/medalpaca/medical_meadow_usmle_self_"
+        "assessment/raw/main/"
+    )
     files = [
-        'question_with_images.json',
-        'step1.json', 'step1_solutions.json',
-        'step2.json', 'step2_solutions.json',
-        'step3.json', 'step3_solutions.json',
+        "question_with_images.json",
+        "step1.json",
+        "step1_solutions.json",
+        "step2.json",
+        "step2_solutions.json",
+        "step3.json",
+        "step3_solutions.json",
     ]
     for fname in files:
         _download(base + fname, dest / fname)
 
 
-def download_medmcqa(dest: Path = Path('data/datasets/medmcqa')) -> None:
+def download_medmcqa(dest: Path = MEDMCQA_DIR) -> None:
     import gdown
+
     dest.mkdir(parents=True, exist_ok=True)
-    out_path = Path('data.zip')
-    gdown.download(id='15VkJdq5eyWIkfb_aoD3oS8i4tScbHYky', output=str(out_path), quiet=False)
+    out_path = Path("data.zip")
+    gdown.download(
+        id="15VkJdq5eyWIkfb_aoD3oS8i4tScbHYky", output=str(out_path), quiet=False
+    )
     with zipfile.ZipFile(out_path) as z:
         z.extractall(dest)
     out_path.unlink()
 
 
-def download_medqa(dest: Path = Path('data/datasets/medqa')) -> None:
+def download_medqa(dest: Path = MEDQA_DIR) -> None:
     import gdown
+
     dest.mkdir(parents=True, exist_ok=True)
-    out_path = Path('data_clean.zip')
-    gdown.download(id='1ImYUSLk9JbgHXOemfvyiDiirluZHPeQw', output=str(out_path), quiet=False)
+    out_path = Path("data_clean.zip")
+    gdown.download(
+        id="1ImYUSLk9JbgHXOemfvyiDiirluZHPeQw", output=str(out_path), quiet=False
+    )
     with zipfile.ZipFile(out_path) as z:
         z.extractall(dest)
-    shutil.move(dest / 'data_clean' / 'questions' / 'US', dest / 'questions')
-    shutil.rmtree(dest / 'data_clean')
+    shutil.move(dest / "data_clean" / "questions" / "US", dest / "questions")
+    shutil.rmtree(dest / "data_clean")
     out_path.unlink()
 
 
-def download_pubmedqa(dest: Path = Path('data/datasets/pubmedqa')) -> None:
+def download_pubmedqa(dest: Path = PUBMEDQA_DIR) -> None:
     dest.mkdir(parents=True, exist_ok=True)
-    url1 = 'https://raw.githubusercontent.com/pubmedqa/pubmedqa/master/data/ori_pqal.json'
-    url2 = 'https://raw.githubusercontent.com/pubmedqa/pubmedqa/master/data/test_ground_truth.json'
-    ori = _download(url1, dest / 'ori_pqal.json')
-    gt = _download(url2, dest / 'test_ground_truth.json')
+    url1 = (
+        "https://raw.githubusercontent.com/pubmedqa/pubmedqa/master/data/ori_pqal.json"
+    )
+    url2 = "https://raw.githubusercontent.com/pubmedqa/pubmedqa/master/data/test_ground_truth.json"
+    ori = _download(url1, dest / "ori_pqal.json")
+    gt = _download(url2, dest / "test_ground_truth.json")
 
     with open(ori) as f:
         data1 = json.load(f)
@@ -83,29 +121,39 @@ def download_pubmedqa(dest: Path = Path('data/datasets/pubmedqa')) -> None:
             test[k] = v
         else:
             train[k] = v
-    with open(dest / 'dev.json', 'w') as f:
+    with open(dest / "dev.json", "w") as f:
         json.dump(train, f, indent=4)
-    with open(dest / 'test.json', 'w') as f:
+    with open(dest / "test.json", "w") as f:
         json.dump(test, f, indent=4)
 
 
-def download_cosmosqa(dest: Path = Path('data/datasets/cosmosqa')) -> None:
+def download_cosmosqa(dest: Path = COSMOSQA_DIR) -> None:
     dest.mkdir(parents=True, exist_ok=True)
-    subprocess.run([
-        'kaggle', 'datasets', 'download',
-        'thedevastator/cosmos-qa-a-large-scale-commonsense-based-readin',
-        '-p', str(dest), '--unzip'
-    ], check=True)
+    subprocess.run(
+        [
+            "kaggle",
+            "datasets",
+            "download",
+            "thedevastator/cosmos-qa-a-large-scale-commonsense-based-readin",
+            "-p",
+            str(dest),
+            "--unzip",
+        ],
+        check=True,
+    )
 
 
-def download_gpqa(dest: Path = Path('data/datasets/gpqa')) -> None:
+def download_gpqa(dest: Path = GPQA_DIR) -> None:
     dest.mkdir(parents=True, exist_ok=True)
-    zip_path = _download('https://github.com/idavidrein/gpqa/blob/main/dataset.zip?raw=true', dest / 'dataset.zip')
+    zip_path = _download(
+        "https://github.com/idavidrein/gpqa/blob/main/dataset.zip?raw=true",
+        dest / "dataset.zip",
+    )
     with zipfile.ZipFile(zip_path) as z:
-        z.extractall(dest, pwd=b'deserted-untie-orchid')
-    for f in (dest / 'dataset').glob('*.csv'):
+        z.extractall(dest, pwd=b"deserted-untie-orchid")
+    for f in (dest / "dataset").glob("*.csv"):
         shutil.move(str(f), dest)
-    shutil.rmtree(dest / 'dataset')
+    shutil.rmtree(dest / "dataset")
     zip_path.unlink()
 
 
@@ -119,5 +167,5 @@ def download_all():
     download_gpqa()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     download_all()
