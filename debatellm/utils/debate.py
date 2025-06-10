@@ -66,6 +66,89 @@ def construct_message(
     return prompt
 
 
+def construct_eot_message(
+    question: str,
+    my_solution: str,
+    peer_names: List[str],
+    peer_responses: List[str],
+    confidences: Optional[List[float]] = None,
+    format_hint: str = "",
+) -> str:
+    """Construct a prompt following the official Exchange-of-Thought format."""
+
+    if confidences is None:
+        confidences = [-1.0 for _ in peer_names]
+
+    # Support up to two peers as per the reference implementation
+    peer_names = peer_names[:2]
+    peer_responses = peer_responses[:2]
+    confidences = confidences[:2]
+
+    if len(peer_names) == 0:
+        return (
+            f"Please consider the example provided and think it step by step.\n"
+            f"Question: {question}"
+        )
+
+    participant1 = peer_names[0]
+    response1 = peer_responses[0]
+    confidence1 = confidences[0]
+    participant2 = peer_names[1] if len(peer_names) > 1 else ""
+    response2 = peer_responses[1] if len(peer_names) > 1 else ""
+    confidence2 = confidences[1] if len(peer_names) > 1 else -1
+
+    if confidence1 == -1 and participant2 == "":
+        query = (
+            "Please consider the example provided and think it step by step.\n"
+            f"Question: {question}\n"
+            f"Your Solution: {my_solution}\n"
+            "Here is a solution process from your friend:\n"
+            f"{participant1}'s Solution: {response1}\n"
+            "Based on your friend's solution, carefully re-examine your previous answer. Utilize your talent and critical thinking to provide a new step-by-step solution process.\n"
+            f"Provide the new solution directly, refrain from commenting on your friend's approach, and conclude by stating, \"the answer is{format_hint}.\""
+        )
+
+    elif confidence1 == -1 and participant2 != "":
+        query = (
+            "Please consider the example provided and think it step by step.\n"
+            f"Question: {question}\n"
+            f"Your Solution: {my_solution}\n"
+            "Here is a solution process from your friend:\n"
+            f"{participant1}'s Solution: {response1}\n"
+            f"{participant2}'s Solution: {response2}\n"
+            "Based on your friend's solution, carefully re-examine your previous answer. Utilize your talent and critical thinking to provide a new step-by-step solution process.\n"
+            f"Provide the new solution directly, refrain from commenting on your friend's approach, and conclude by stating, \"the answer is{format_hint}.\""
+        )
+
+    elif confidence1 != -1 and participant2 == "":
+        query = (
+            "Please consider the example provided and think it step by step.\n"
+            f"Question: {question}\n"
+            f"Your Solution: {my_solution}\n"
+            "Here is a solution process from your friend:\n"
+            f"{participant1}'s Solution: {response1}\n"
+            f"{participant1}'s confidence in this solution is: {confidence1}\n"
+            "Based on your friend's solution, carefully re-examine your previous answer. If your friend's confidence level is below 0.5, it suggests a high probability that the solution might be incorrect. Remember, solutions with high confidence can also be wrong. Utilize your talent and critical thinking to provide a new step-by-step solution process.\n"
+            f"Provide the new solution directly, refrain from commenting on your friend's approach, and conclude by stating, \"the answer is{format_hint}.\""
+        )
+
+    else:
+        query = (
+            "Please consider the example provided and think it step by step.\n"
+            f"Question: {question}\n"
+            f"Your Solution: {my_solution}\n"
+            "Here is a solution process from your friend:\n"
+            f"{participant1}'s Solution: {response1}\n"
+            f"{participant1}'s confidence in this solution is: {confidence1}\n"
+            f"{participant2}'s Solution: {response2}\n"
+            f"{participant2}'s confidence in this solution is: {confidence2}\n"
+            "Based on your friend's solution, carefully re-examine your previous answer. If your friend's confidence level is below 0.5, it suggests a high probability that the solution might be incorrect. Remember, solutions with high confidence can also be wrong. Utilize your talent and critical thinking to provide a new step-by-step solution process.\n"
+            f"Provide the new solution directly, refrain from commenting on your friend's approach, and conclude by stating, \"the answer is{format_hint}.\""
+        )
+
+    return query
+
+
 def construct_message_from_history(
     message_history: List[dict],
     agent_name: Optional[str] = "",
