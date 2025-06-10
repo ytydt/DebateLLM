@@ -23,6 +23,7 @@ from debatellm.utils.debate import (
     construct_message,
     construct_summary_message,
     most_frequent,
+    construct_eot_message,
 )
 
 
@@ -650,6 +651,116 @@ class MultiAgentDebateGoogle(QASystem):
         }
 
 
+class ExchangeOfThought(QASystem):
+    def __init__(
+        self,
+        agents: list,
+        debate_prompts: dict,
+        num_rounds: int,
+        communication_mode: str = "Memory",
+        verbose: bool = False,
+        mock: bool = False,  # Unused
+        agent_prompts: Optional[dict] = None,  # Unused
+    ) -> None:
+        super().__init__(verbose=verbose)
+        self._agents = agents
+        self._agent_names = [type(agent).__name__ for agent in agents]
+        self._num_agents = len(agents)
+        self._num_rounds = num_rounds
+        self.communication_mode = communication_mode
+        self.prompts = debate_prompts
+        self._system_message = debate_prompts["system_message"]
+
+    """Exchange-of-Thought protocol for cross-model communication."""
+
+    def metrics(
+        self, info: Dict[str, Any], format_solution_fn: Callable, solution: str
+    ) -> Dict[str, Any]:
+        return construct_debate_metrics(
+            info=info,
+            format_solution_fn=format_solution_fn,
+            solution=solution,
+            verbose=self._verbose,
+            agents=[f"Agent_{agent}" for agent in range(self._num_agents)],
+            agent_names=self._agent_names,
+            num_rounds=self._num_rounds,
+        )
+
+    def answer(
+        self,
+        question: str,
+    ) -> Tuple[str, Any]:
+        agent_answers: Any = {f"Agent_{agent}": {} for agent in range(self._num_agents)}
+        agent_info: Any = {f"Agent_{agent}": {} for agent in range(self._num_agents)}
+        agent_responses: Any = {f"Agent_{agent}": {} for agent in range(self._num_agents)}
+
+        last_responses = ["" for _ in range(self._num_agents)]
+
+        for round_index in range(self._num_rounds):
+            if self._verbose:
+                print("#######################")
+                print(f"THOUGHT EXCHANGE ROUND {round_index}")
+                print("#######################")
+                print("")
+
+            for i in range(self._num_agents):
+                if round_index == 0:
+                    prompt = self._system_message + "\n\n" + question
+                else:
+                    if self.communication_mode == "Memory":
+                        peer_indices = [j for j in range(self._num_agents) if j != i]
+                    elif self.communication_mode == "Report":
+                        if i == 0:
+                            peer_indices = [j for j in range(self._num_agents) if j != i]
+                        else:
+                            peer_indices = [0]
+                    elif self.communication_mode == "Relay":
+                        peer_indices = [(i + 1) % self._num_agents]
+                    elif self.communication_mode == "Debate":
+                        if self._num_agents == 2:
+                            peer_indices = [1 - i]
+                        elif i == 0:
+                            peer_indices = [j for j in range(self._num_agents) if j != 0]
+                        elif self._num_agents == 3:
+                            peer_indices = [2] if i == 1 else [1]
+                        else:
+                            peer_indices = [(i + 1) % self._num_agents]
+                    else:
+                        peer_indices = [j for j in range(self._num_agents) if j != i]
+
+                    peer_names = [f"Agent_{j}" for j in peer_indices]
+                    peer_responses = [last_responses[j] for j in peer_indices]
+
+                    prompt = self._system_message + "\n\n" + construct_eot_message(
+                        question=question,
+                        my_solution=last_responses[i],
+                        peer_names=peer_names,
+                        peer_responses=peer_responses,
+                        format_hint=self.prompts.get("format_hint", ""),
+                    )
+
+                if self._verbose:
+                    print(f"\n---- AGENT {i} ----")
+
+                answer, info = self._agents[i].answer(prompt=prompt)
+                response = info["response"]
+                agent_answers[f"Agent_{i}"][f"Round_{round_index}"] = answer
+                agent_responses[f"Agent_{i}"][f"Round_{round_index}"] = response
+                agent_info[f"Agent_{i}"][f"Round_{round_index}"] = info
+                last_responses[i] = response
+
+        final_answers = [
+            agent_answers[f"Agent_{agent}"][f"Round_{self._num_rounds - 1}"]
+            for agent in range(self._num_agents)
+        ]
+        answer, _ = most_frequent(final_answers)
+
+        return answer, {
+            "response": agent_responses,
+            "agent_answers": agent_answers,
+            "agent_info": agent_info,
+        }
+        
 class EnsembleRefinementDebate(QASystem):
     def __init__(
         self,
